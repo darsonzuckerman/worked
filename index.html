@@ -75,7 +75,7 @@
       const { proxy, bot_status, fraud_score } = ipqsData;
       // Example logic:
       // Block if IP is flagged as proxy, or as a bot, or if fraud_score > 70
-      if (proxy === true || bot_status === true || fraud_score > 70) {
+      if (proxy === true || bot_status === true || fraud_score > 50) {
         return {
           allowed: false,
           reason: `Blocked by IPQS. Proxy: ${proxy}, Bot: ${bot_status}, Fraud Score: ${fraud_score}`
