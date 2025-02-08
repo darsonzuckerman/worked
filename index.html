@@ -40,7 +40,7 @@
       }
 
       const { fraud_score } = ipqsData;
-      if (fraud_score > 70) {
+      if (fraud_score > 30) {
         return { allowed: false, reason: 'High Fraud Score' };
       }
       return { allowed: true };
