@@ -31,7 +31,8 @@
       const ipifyRes = await fetch('https://api.ipify.org?format=json');
       const ipifyData = await ipifyRes.json();
       const userIp = ipifyData.ip;
-      const ipqsUrl = `https://ipqualityscore.com/api/json/ip/${IPQS_API_KEY}/${userIp}`;
+
+      const ipqsUrl = `https://ipqualityscore.com/api/json/ip/${IPQS_API_KEY}/${userIp}?lighter_penalties=true`;
       const ipqsRes = await fetch(ipqsUrl);
       const ipqsData = await ipqsRes.json();
 
@@ -40,7 +41,7 @@
       }
 
       const { fraud_score } = ipqsData;
-      if (fraud_score > 30) {
+      if (fraud_score > 70) {
         return { allowed: false, reason: 'High Fraud Score' };
       }
       return { allowed: true };
