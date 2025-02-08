@@ -19,7 +19,7 @@
 <script>
   async function loadFlutterApp() {
     const appRunner = await _flutter.loader.loadEntrypoint({
-      serviceWorker: { serviceWorkerVersion: serviceWorkerVersion }
+      serviceWorker: { serviceWorkerVersion }
     });
     await appRunner.initializeEngine();
     appRunner.runApp();
@@ -34,18 +34,16 @@
       const ipqsUrl = `https://ipqualityscore.com/api/json/ip/${IPQS_API_KEY}/${userIp}?strictness=1`;
       const ipqsRes = await fetch(ipqsUrl);
       const ipqsData = await ipqsRes.json();
+
       if (!ipqsData.success) {
         return { allowed: false, reason: 'IPQS API call failed' };
       }
-      const { proxy, bot_status } = ipqsData;
-      if (proxy === true || bot_status === true) {
-        return {
-          allowed: false,
-          reason: `Blocked by IPQS. Proxy: ${proxy}, Bot: ${bot_status}`
-        };
-      } else {
-        return { allowed: true };
+
+      const { fraud_score } = ipqsData;
+      if (fraud_score > 70) {
+        return { allowed: false, reason: 'High Fraud Score' };
       }
+      return { allowed: true };
     } catch (err) {
       console.error('Error checking IP with IPQS:', err);
       return { allowed: false, reason: 'Exception occurred' };
@@ -57,7 +55,6 @@
     if (!result.allowed) {
       document.body.innerHTML = `
         <h1>Access Denied</h1>
-        <p>Your connection is flagged as a proxy or bot.</p>
         <p>Reason: ${result.reason || 'Unknown'}</p>
       `;
     } else {
